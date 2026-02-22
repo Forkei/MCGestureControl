@@ -24,6 +24,7 @@ import torch
 
 from control_model import ControlTransformer, ControlTransformerV2
 from gesture_dataset import append_velocity, _POSITION_DIMS
+from mcstp import flatten_state
 
 
 # ---------------------------------------------------------------------------
@@ -591,7 +592,7 @@ def encode_game_state_v2(mcctp_state_dict: dict) -> np.ndarray:
         gs[24] = 1.0   # attack_cooldown (fully ready)
         return gs
 
-    d = mcctp_state_dict
+    d = flatten_state(mcctp_state_dict)
 
     # --- Item Context (indices 0-10) ---
     _classify_mainhand_v2(d, gs)

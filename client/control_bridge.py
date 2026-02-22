@@ -24,6 +24,7 @@ Usage:
 import time
 
 from mcctp import SyncMCCTPClient, Actions
+from mcstp import Actions as MCSTPActions, flatten_state
 
 from control_policy import ControlOutput, ControlOutputV2
 
@@ -82,7 +83,7 @@ class ControlBridge:
         is_sneaking, is_blocking, is_using_item, fall_distance.
         """
         try:
-            return self._client.state or {}
+            return flatten_state(self._client.state or {})
         except Exception:
             return {}
 
@@ -261,7 +262,7 @@ class ControlBridgeV2:
     def get_game_state(self) -> dict:
         """Query current game state from MCCTP."""
         try:
-            return self._client.state or {}
+            return flatten_state(self._client.state or {})
         except Exception:
             return {}
 
@@ -339,7 +340,7 @@ class ControlBridgeV2:
                 self._release_held(name)
 
         # Cursor: send every frame
-        self._send(Actions.cursor(
+        self._send(MCSTPActions.cursor(
             x=output.cursor_x, y=output.cursor_y
         ))
 
@@ -350,9 +351,9 @@ class ControlBridgeV2:
 
         # Inventory clicks: pulse on rising edge
         self._fire_pulse("inv_left_click", output.inv_left_click, now,
-                         Actions.click(button="left"))
+                         MCSTPActions.click(button="left"))
         self._fire_pulse("inv_right_click", output.inv_right_click, now,
-                         Actions.click(button="right"))
+                         MCSTPActions.click(button="right"))
 
     def _set_held(self, name: str, wanted: bool, now: float,
                   start_action: dict, stop_action: dict):

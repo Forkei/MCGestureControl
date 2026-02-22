@@ -52,6 +52,7 @@ from stream_client import DEFAULT_RESOLUTION, DEFAULT_JPEG_QUALITY, DEFAULT_WB
 from hand_tracker import HandTracker
 from pose_tracker import PoseTracker
 from control_policy import encode_game_state_v2
+from mcstp import flatten_state
 from control_dataset import (
     CTRL_MOVE_FORWARD, CTRL_MOVE_BACKWARD, CTRL_STRAFE_LEFT, CTRL_STRAFE_RIGHT,
     CTRL_SPRINT, CTRL_SNEAK, CTRL_JUMP, CTRL_ATTACK, CTRL_USE_ITEM,
@@ -110,7 +111,7 @@ class MCCTPControlCapture:
         # Get initial hotbar slot
         if self._client is not None:
             try:
-                d = self._client.state or {}
+                d = flatten_state(self._client.state or {})
                 self._prev_slot = int(d.get("selected_slot",
                                              d.get("selectedSlot", 0)))
             except Exception:
@@ -136,11 +137,12 @@ class MCCTPControlCapture:
             return controls
 
         try:
-            d = self._client.state or {}
+            raw = self._client.state or {}
         except Exception:
             self._last_state_dict = {}
             return controls
 
+        d = flatten_state(raw)
         self._last_state_dict = d
 
         # --- Movement ---
