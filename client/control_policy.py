@@ -143,7 +143,7 @@ def encode_game_state(raw_state: dict) -> np.ndarray:
                    on_fire.
 
     Args:
-        raw_state: Dict from GameState.to_control_dict(). Expected keys include
+        raw_state: Dict from MCCTP client.state dict. Expected keys include
                    held_item_category, health, hunger, on_ground, etc.
 
     Returns:
@@ -570,12 +570,12 @@ def _classify_offhand_v2(raw_state: dict, gs: np.ndarray):
 
 
 def encode_game_state_v2(mcctp_state_dict: dict) -> np.ndarray:
-    """Convert MCCTP GameState.to_control_dict() → (46,) float32.
+    """Convert MCCTP MCCTP client.state dict → (46,) float32.
 
     This is THE canonical v2 game state encoder. Other files import from here.
 
     Args:
-        mcctp_state_dict: Dict from MCCTP client.state.to_control_dict().
+        mcctp_state_dict: Dict from MCCTP client.state dict.
 
     Returns:
         Float32 array of shape (46,) per Contract 3.
@@ -868,7 +868,7 @@ class ControlPolicyV2:
         Args:
             pose: PoseLandmarks or None.
             hands: List of HandLandmarks.
-            game_state_dict: Dict from MCCTP client.state.to_control_dict().
+            game_state_dict: Dict from MCCTP client.state dict.
         """
         # Extract 260 raw features (same layout as v1)
         if pose is not None and pose.world_landmarks:

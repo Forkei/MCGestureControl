@@ -82,10 +82,7 @@ class ControlBridge:
         is_sneaking, is_blocking, is_using_item, fall_distance.
         """
         try:
-            state = self._client.state
-            if state is None:
-                return {}
-            return state.to_control_dict()
+            return self._client.state or {}
         except Exception:
             return {}
 
@@ -264,10 +261,7 @@ class ControlBridgeV2:
     def get_game_state(self) -> dict:
         """Query current game state from MCCTP."""
         try:
-            state = self._client.state
-            if state is None:
-                return {}
-            return state.to_control_dict()
+            return self._client.state or {}
         except Exception:
             return {}
 

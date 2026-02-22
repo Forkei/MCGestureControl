@@ -110,8 +110,7 @@ class MCCTPControlCapture:
         # Get initial hotbar slot
         if self._client is not None:
             try:
-                state = self._client.state
-                d = state.to_control_dict() if state else {}
+                d = self._client.state or {}
                 self._prev_slot = int(d.get("selected_slot",
                                              d.get("selectedSlot", 0)))
             except Exception:
@@ -137,8 +136,7 @@ class MCCTPControlCapture:
             return controls
 
         try:
-            state = self._client.state
-            d = state.to_control_dict() if state else {}
+            d = self._client.state or {}
         except Exception:
             self._last_state_dict = {}
             return controls
