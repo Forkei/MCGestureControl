@@ -1,0 +1,26 @@
+# Training data & recordings
+client/recordings/
+client/recordings_control/
+client/recordings_gameplay/
+*.npz
+*.mp4
+
+# Model weights
+client/models/*.pt
+*.task
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+.venv/
+
+# Claude
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
