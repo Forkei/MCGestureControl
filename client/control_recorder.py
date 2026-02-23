@@ -216,6 +216,7 @@ class MCCTPControlCapture:
         self._prev_yaw = None
         self._prev_pitch = None
         self._prev_slot = None
+        self._prev_screen_open = False
         self._active = False
         self._last_state_dict = {}
 
@@ -223,6 +224,7 @@ class MCCTPControlCapture:
         """Enable control capture (call when recording starts)."""
         self._prev_yaw = None
         self._prev_pitch = None
+        self._prev_screen_open = False
         # Get initial hotbar slot
         if self._client is not None:
             try:
@@ -328,8 +330,17 @@ class MCCTPControlCapture:
                                                 d.get("drop_item", False))))
         controls[CTRL_SWAP_OFFHAND] = float(d.get("input_swap_offhand",
                                                     d.get("swap_offhand", False)))
-        controls[CTRL_OPEN_INVENTORY] = float(d.get("input_open_inventory",
-                                                      d.get("open_inventory", False)))
+        # open_inventory: prefer mod's playerInput, but if always zero
+        # (known mod bug), infer from screen_open transitions instead
+        open_inv_raw = d.get("input_open_inventory",
+                             d.get("open_inventory", False))
+        screen_open = d.get("screen_open", d.get("screenOpen", False))
+        if open_inv_raw:
+            controls[CTRL_OPEN_INVENTORY] = 1.0
+        elif bool(screen_open) != self._prev_screen_open:
+            # Any screen_open transition implies inventory key was pressed
+            controls[CTRL_OPEN_INVENTORY] = 1.0
+        self._prev_screen_open = bool(screen_open)
 
         # --- Hotbar (one-hot on change) ---
         current_slot = int(d.get("selected_slot",
