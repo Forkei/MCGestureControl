@@ -84,6 +84,121 @@ _FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 
 # ---------------------------------------------------------------------------
+# State dict flattening (new MCCTP sends nested camelCase dicts)
+# ---------------------------------------------------------------------------
+
+
+def flatten_mcctp_state(raw: dict) -> dict:
+    """Flatten the nested MCCTP state dict to the flat snake_case format
+    expected by MCCTPControlCapture and encode_game_state_v2.
+
+    New MCCTP format nests data under: playerState, playerInput,
+    combatContext, screenState, statusEffects, threat, heldItem, offhandItem.
+    Old format had everything flat with snake_case keys.
+    """
+    if not raw:
+        return {}
+
+    # Already flat format (old MCCTP) — detect by checking for a nested key
+    if "playerState" not in raw and "playerInput" not in raw:
+        return raw
+
+    d = {}
+
+    # Top-level
+    d["selected_slot"] = raw.get("selectedSlot", 0)
+
+    # heldItem
+    hi = raw.get("heldItem", {})
+    d["held_item"] = hi.get("name", "")
+    d["held_item_category"] = hi.get("category", "EMPTY")
+
+    # offhandItem
+    oi = raw.get("offhandItem", {})
+    d["offhand_category"] = oi.get("category", "EMPTY")
+
+    # playerState
+    ps = raw.get("playerState", {})
+    d["health"] = ps.get("health", 20.0)
+    d["hunger"] = ps.get("hunger", 20)
+    d["armor"] = ps.get("armor", 0)
+    d["x"] = ps.get("x", 0.0)
+    d["y"] = ps.get("y", 0.0)
+    d["z"] = ps.get("z", 0.0)
+    d["yaw"] = ps.get("yaw", 0.0)
+    d["pitch"] = ps.get("pitch", 0.0)
+    d["on_ground"] = ps.get("onGround", True)
+    d["is_sprinting"] = ps.get("sprinting", False)
+    d["is_sneaking"] = ps.get("sneaking", False)
+    d["swimming"] = ps.get("swimming", False)
+    d["flying"] = ps.get("flying", False)
+    d["in_water"] = ps.get("inWater", False)
+    d["on_fire"] = ps.get("onFire", False)
+    d["fall_distance"] = ps.get("fallDistance", 0.0)
+    d["velocity_y"] = ps.get("velocityY", ps.get("velocity_y", 0.0))
+    d["horizontal_collision"] = ps.get("horizontalCollision", False)
+    d["is_climbing"] = ps.get("climbing", False)
+
+    # playerInput
+    pi = raw.get("playerInput", {})
+    d["movement_forward"] = pi.get("movementForward", 0.0)
+    d["movement_sideways"] = pi.get("movementSideways", 0.0)
+    d["input_jump"] = pi.get("jump", False)
+    d["input_sprint"] = pi.get("sprint", False)
+    d["input_sneak"] = pi.get("sneak", False)
+    d["input_attack"] = pi.get("attack", False)
+    d["input_use_item"] = pi.get("useItem", False)
+    d["input_drop"] = pi.get("drop", False)
+    d["input_swap_offhand"] = pi.get("swapOffhand", False)
+    d["input_open_inventory"] = pi.get("openInventory", False)
+    d["yaw_delta"] = pi.get("yawDelta", 0.0)
+    d["pitch_delta"] = pi.get("pitchDelta", 0.0)
+
+    # combatContext
+    cc = raw.get("combatContext", {})
+    d["attack_cooldown"] = cc.get("attackCooldown", 1.0)
+    d["is_using_item"] = cc.get("isUsingItem", False)
+    d["is_blocking"] = cc.get("isBlocking", False)
+    d["item_use_progress"] = cc.get("itemUseProgress", 0.0)
+    d["recently_hurt"] = cc.get("recentlyHurt", False)
+    d["crosshair_target"] = cc.get("crosshairTarget", "")
+    d["target_entity_hostile"] = cc.get("targetEntityHostile", False)
+    d["target_distance"] = cc.get("crosshairDistance", cc.get("targetDistance", 6.0))
+
+    # screenState
+    ss = raw.get("screenState", {})
+    d["screen_open"] = ss.get("screenOpen", False)
+    d["screen_open_type"] = ss.get("screenType", "none")
+    d["cursor_x"] = ss.get("cursorX", -1.0)
+    d["cursor_y"] = ss.get("cursorY", -1.0)
+    d["mouse_left"] = ss.get("mouseLeft", False)
+    d["mouse_right"] = ss.get("mouseRight", False)
+    d["shift_held"] = ss.get("shiftHeld", False)
+
+    # statusEffects
+    se = raw.get("statusEffects", {})
+    d["has_speed"] = se.get("speed", False)
+    d["has_slowness"] = se.get("slowness", False)
+    d["has_strength"] = se.get("strength", False)
+    d["has_fire_resist"] = se.get("fireResistance", False)
+    d["has_poison"] = se.get("poison", False)
+    d["has_wither"] = se.get("wither", False)
+
+    # threat
+    th = raw.get("threat", {})
+    d["target_entity_hostile"] = th.get("targetEntityHostile", d.get("target_entity_hostile", False))
+    d["nearest_hostile_dist"] = th.get("nearestHostileDist", 32.0)
+    d["nearest_hostile_yaw"] = th.get("nearestHostileYaw", 0.0)
+    d["hostile_count"] = th.get("hostileCount", 0)
+
+    # game mode — not in new format, default to survival
+    d["game_mode"] = raw.get("gameMode", "survival")
+    d["time_of_day"] = raw.get("timeOfDay", ps.get("timeOfDay", 0))
+
+    return d
+
+
+# ---------------------------------------------------------------------------
 # MCCTP Control Capture (replaces v1's pynput ControlInputCapture)
 # ---------------------------------------------------------------------------
 
